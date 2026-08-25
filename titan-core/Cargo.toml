@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/titan_kyber",
+    "crates/titan_dilithium",
+    "crates/titan_envelope",
+    "crates/titan_ratchet",
+    "crates/titan_hal",
+    "crates/titan_entropy",
+    "crates/titan_hopping",
+    "crates/titan_dead_drop",
+    "crates/titan_dht",
+    "crates/titan_sentry",
+    "crates/titan_integration_tests",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "Proprietary"
+
+[workspace.dependencies]
+zeroize = { version = "1", features = ["derive"] }
+rand = "0.8"
+hkdf = "0.12"
+sha2 = "0.10"
+chacha20poly1305 = "0.10"
+tokio = { version = "1", features = ["rt", "time", "sync", "macros"] }

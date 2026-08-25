@@ -1,0 +1,13 @@
+[package]
+name = "hidra_sim"
+description = "PROJECT HİDRA — PC Simulator (development)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+hidra_core = { path = "../hidra_core" }
+hidra_net = { path = "../hidra_net" }
+tokio = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+anyhow = { workspace = true }

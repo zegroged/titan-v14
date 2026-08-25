@@ -1,0 +1,141 @@
+================================================================================
+            TITAN V14: DONANIM TEST PLANI
+================================================================================
+                       9 Şubat 2026
+================================================================================
+
+GEREKLİ EKİPMAN:
+  - 2x Artix-7 kartı (XC7A100T-1CSG324)
+  - USB-UART dönüştürücü (2x — RED UART için)
+  - SPI key filler cihazı (veya Arduino + SPI yazılımı)
+  - Osiloskop (opsiyonel — timing doğrulama)
+  - Jumper kabloları (BLACK UART cross-connect için)
+
+================================================================================
+TEST 1: POST SELF-TEST DOĞRULAMA
+================================================================================
+Adım:
+  1. FPGA'yı programla (bitstream yükle)
+  2. LED_POST_FAIL izle:
+     - SÖNÜK = POST PASS ✓
+     - YANIK = POST FAIL ✗ (AES veya TRNG sorunu)
+  3. LED_STATUS_GREEN izle:
+     - Yanıp sönüyor = heartbeat aktif, sistem hazır ✓
+
+Beklenen:
+  - LED_POST_FAIL = OFF
+  - LED_STATUS_GREEN = yanıp söner (1 Hz)
+
+================================================================================
+TEST 2: KEY INJECTION (SPI)
+================================================================================
+Adım:
+  1. SPI master'ı bağla (SCLK→A11, MOSI→B11, CS_N→G13)
+  2. 256-bit test key gönder:
+     Key = 0x000102030405060708090A0B0C0D0E0F
+           101112131415161718191A1B1C1D1E1F
+  3. CS_N kaldır
+  4. LED_STATUS_GREEN'in heartbeat'e geçtiğini doğrula
+
+Beklenen:
+  - key_valid='1' (internal — telemetri UART ile okuyabilirsin)
+
+================================================================================
+TEST 3: UART LOOPBACK (Tek Cihaz)
+================================================================================
+Adım:
+  1. COMM_MODE_PIN = '0' (TX — B4'ü GND'ye bağla)
+  2. PC'den RED UART'a 16 byte gönder:
+     Data = "HELLO TITAN V14!" (0x48454C4C4F20..2E)
+  3. BLACK_UART_TX_PIN (C4) çıkışını osiloskopla izle
+  4. 41 byte frame geldiğini doğrula:
+     [AA 55 AA 55] [00 00 00 00] [01] [16B CT] [16B MAC]
+
+  5. BLACK_UART_TX → BLACK_UART_RX'e jumper kablo ile bağla (loopback)
+  6. COMM_MODE_PIN = '1' (RX — B4'ü VCC'ye bağla)
+  7. RED UART TX çıkışında decrypt edilmiş "HELLO TITAN V14!" geldiğini doğrula
+
+Beklenen:
+  - TX: 41 byte şifreli frame
+  - RX: 16 byte plaintext = orijinal veri
+
+================================================================================
+TEST 4: İKİ CİHAZ ARASI İLETİŞİM
+================================================================================
+Bağlantı:
+  Cihaz A (TX):  BLACK_UART_TX (C4) ──→ Cihaz B: BLACK_UART_RX (D3)
+  Cihaz B (TX):  BLACK_UART_TX (C4) ──→ Cihaz A: BLACK_UART_RX (D3)
+  GND:           Her iki kartın GND'si birbirine
+
+Adım:
+  1. Her iki cihaza AYNI 256-bit key yükle (SPI)
+  2. Cihaz A: COMM_MODE='0' (TX)
+  3. Cihaz B: COMM_MODE='1' (RX)
+  4. PC A'dan RED UART ile "TEST MESSAGE" gönder
+  5. PC B'de RED UART'tan decrypt edilmiş "TEST MESSAGE" gel
+
+  6. YANLIŞ KEY TESTİ:
+     - Cihaz B'ye farklı key yükle
+     - Mesaj gönder
+     - Cihaz B'de mac_error='1' ve veri çıkmamalı
+
+Beklenen:
+  - Doğru key: plaintext başarıyla iletilir
+  - Yanlış key: MAC error, veri çıkmaz
+
+================================================================================
+TEST 5: ANTI-REPLAY
+================================================================================
+Adım:
+  1. Normal iletişim kur (Test 4)
+  2. Osiloskop ile BLACK UART hattını yakala (frame kaydet)
+  3. Aynı frame'i tekrar enjekte et (replay attack)
+  4. Cihaz B'de frame_error='1' olmalı
+
+Beklenen:
+  - Replay frame reddedilir (SeqNum <= last_SeqNum)
+
+================================================================================
+TEST 6: KILL/ZEROIZATION
+================================================================================
+Adım:
+  1. Normal iletişim kur
+  2. KILL_PIN'i (D9) HIGH yap (3.3V)
+  3. Gözle:
+     - LED_STATUS_RED = ON (tamper alarm)
+     - İletişim durur
+     - Key silinir
+  4. KILL_PIN'i LOW yap
+  5. Yeni key yükle
+  6. İletişim yeniden başlamalı
+
+Beklenen:
+  - Kill anında tüm veri sıfırlanır
+  - Yeniden key yüklenmeden iletişim kurulamaz
+
+================================================================================
+TEST 7: MULTI-BLOCK MESAJ
+================================================================================
+Adım:
+  1. Normal iletişim kur
+  2. PC'den 32 byte (2 blok) gönder:
+     "HELLO TITAN V14! MULTI BLOCK!..."
+  3. V2 wire format'ta NBLK=2 olmalı
+  4. Karşı tarafta 32 byte plaintext geldiğini doğrula
+
+Beklenen:
+  - 2 blok CT + 1 MAC = 57 byte frame (4+4+1+32+16)
+
+================================================================================
+TEST 8: eFUSE PROGRAMLAMA (ÜRETİM)
+================================================================================
+!! DİKKAT: GERİ DÖNÜŞÜ YOK !!
+
+Adım:
+  1. Test bitene kadar bu adımı YAPMA
+  2. program_efuse.tcl'i güncelle (gerçek key)
+  3. vivado -mode batch -source program_efuse.tcl
+  4. Şifresiz bitstream ile test et → yüklenmemeli
+  5. Şifreli bitstream ile test et → yüklenmeli
+
+================================================================================

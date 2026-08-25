@@ -1,0 +1,39 @@
+[package]
+name = "hidra-core-fuzz"
+version = "0.0.1"
+authors = ["Project HIDRA"]
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.hidra_core]
+path = ".."
+
+# ═══════════════════════════════════════════════════════════════
+# Fuzz Targets — requires: cargo +nightly fuzz run <target>
+# ═══════════════════════════════════════════════════════════════
+
+[[bin]]
+name = "fuzz_hlp_packet"
+path = "fuzz_targets/fuzz_hlp_packet.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_layer1_envelope"
+path = "fuzz_targets/fuzz_layer1_envelope.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_transport_envelope"
+path = "fuzz_targets/fuzz_transport_envelope.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_dh_ratchet_header"
+path = "fuzz_targets/fuzz_dh_ratchet_header.rs"
+doc = false

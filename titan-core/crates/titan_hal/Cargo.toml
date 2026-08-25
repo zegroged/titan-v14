@@ -1,0 +1,7 @@
+[package]
+name = "titan_hal"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+zeroize = { workspace = true }

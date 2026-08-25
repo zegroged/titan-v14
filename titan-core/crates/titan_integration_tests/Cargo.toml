@@ -1,0 +1,16 @@
+[package]
+name = "titan_integration_tests"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+titan_kyber = { path = "../titan_kyber" }
+titan_dilithium = { path = "../titan_dilithium" }
+titan_envelope = { path = "../titan_envelope" }
+titan_ratchet = { path = "../titan_ratchet" }
+titan_hal = { path = "../titan_hal" }
+titan_entropy = { path = "../titan_entropy" }
+titan_hopping = { path = "../titan_hopping" }
+titan_dead_drop = { path = "../titan_dead_drop" }
+titan_dht = { path = "../titan_dht" }
+titan_sentry = { path = "../titan_sentry" }

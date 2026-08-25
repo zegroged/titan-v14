@@ -1,0 +1,8 @@
+[package]
+name = "titan_dead_drop"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+zeroize = { workspace = true }
+tokio = { workspace = true }

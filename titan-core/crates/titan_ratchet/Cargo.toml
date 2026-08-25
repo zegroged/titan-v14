@@ -1,0 +1,10 @@
+[package]
+name = "titan_ratchet"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+hkdf = { workspace = true }
+sha2 = { workspace = true }
+zeroize = { workspace = true }
+titan_kyber = { path = "../titan_kyber" }

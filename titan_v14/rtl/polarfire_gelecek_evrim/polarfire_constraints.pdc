@@ -1,0 +1,162 @@
+################################################################################
+## PROJECT TITAN V13: Microchip PolarFire Constraint File
+## FPGA: PolarFire MPF100T (MPF100T-FCSG324)
+## Board: Custom Security Terminal PCB
+################################################################################
+## AMAÇ: Pin tanımları, timing constraints ve clock configuration
+################################################################################
+
+################################################################################
+## SAAT SİNYALİ (Clock Input)
+################################################################################
+## Kaynak: SiTime SiT5356 (100 MHz) → 74VHC74 Prescaler → 50 MHz
+## Önemli: Artix-7 ile aynı kaynak (Length-matched traces ile)
+################################################################################
+
+# 50 MHz Harici Saat Girişi
+create_clock -name {clk_ext_50} -period 20.000 [get_ports {PIN_EXT_CLK_50MHZ}]
+set_io {PIN_EXT_CLK_50MHZ} -pinname A7 -fixed yes -DIRECTION INPUT
+set_io {PIN_EXT_CLK_50MHZ} -IOSTD LVCMOS33
+
+################################################################################
+## GÜVENLİK SİNYALLERİ (Security Signals)
+################################################################################
+
+## KILL PIN (Asenkron Tamper Sinyali)
+## Kaynak: LTC1540 Comparator çıkışı
+set_io {KILL_PIN} -pinname B9 -fixed yes -DIRECTION INPUT
+set_io {KILL_PIN} -IOSTD LVCMOS33
+
+## Factory Calibration Jumper
+## Pull-up direnci aktif
+set_io {JUMPER_CALIB} -pinname C8 -fixed yes -DIRECTION INPUT
+set_io {JUMPER_CALIB} -IOSTD LVCMOS33 -RES_PULL Up
+
+################################################################################
+## DURUM LED'LERİ (Status LEDs)
+################################################################################
+
+## Kırmızı LED (Tamper Detected)
+set_io {LED_STATUS_RED} -pinname H6 -fixed yes -DIRECTION OUTPUT
+set_io {LED_STATUS_RED} -IOSTD LVCMOS33 -OUT_DRIVE 8 -SLEW Low
+
+## Yeşil LED (Factory Mode - Calibration OK)
+set_io {LED_STATUS_GREEN} -pinname J6 -fixed yes -DIRECTION OUTPUT
+set_io {LED_STATUS_GREEN} -IOSTD LVCMOS33 -OUT_DRIVE 8 -SLEW Low
+
+################################################################################
+## LOGIC WALL GİRİŞİ (74HC688 Komparatör Sonuçları)
+################################################################################
+## 33 adet komparatör "MATCH" çıkışlarını toplar (Oylama sistemi)
+set_io {LOGIC_WALL_MATCH} -pinname M14 -fixed yes -DIRECTION INPUT
+set_io {LOGIC_WALL_MATCH} -IOSTD LVCMOS33
+
+################################################################################
+## TİMİNG CONSTRAINTS
+################################################################################
+
+################################################################################
+## GLOBAL NETWORK PROMOTION (PolarFire KILL Signal)
+################################################################################
+## KOMUTAN ŞERHİ: "PolarFire'da CCC kullanma, bu reset sinyali! 
+##                 Doğrudan Global Routing ağına yükselt (Otoban)!"
+##
+## KILL sinyalini I/O'dan alır almaz Global Network'e promote et
+## Bu, FPGA'nın her köşesine düşük skew ile eşzamanlı ulaşım sağlar
+################################################################################
+
+# KILL sinyalini global network'e yükselt
+set_global -net_name {kill_active} -promote_global
+
+# Max fanout sınırlaması kaldır (global network halleder)
+set_max_fanout 10000 [get_nets {kill_active}]
+
+################################################################################
+## RADYASYON BAĞIŞIKLIĞI (SEU Koruması - PolarFire Özelliği)
+################################################################################
+## PolarFire Flash-based FPGA olduğu için SRAM-based Artix-7'ye göre
+## radyasyona daha dayanıklıdır. Ek koruma için TMR (Triple Modular
+## Redundancy) kullanılabilir ancak bu versiyonda uygulanmamıştır.
+################################################################################
+
+# SEU detection ve correction (PolarFire özelliği - otomatik aktif)
+# configure_tool -name {PLACE_AND_ROUTE} -params {EFFORT_LEVEL:true} 
+# configure_tool -name {PLACE_AND_ROUTE} -params {TDPR:true}
+
+
+################################################################################
+## DUAL-FPGA LOCKSTEP ARAYÜZÜ (FAZ 5: İKİZ KULELER)
+################################################################################
+## PolarFire ←→ Artix-7 Cross-Strike Interface
+##
+## KOMUTAN ŞERHİ: "İki kule birbirini gözetler. Biri susarsa, diğeri vurur!"
+################################################################################
+
+## ARTIX_HEARTBEAT: Artix-7'den gelen canlılık sinyali
+## Kaynak: Artix LED_STATUS_GREEN pini → PCB trace → PolarFire input
+set_io {ARTIX_HEARTBEAT} -pinname B12 -fixed yes -DIRECTION INPUT
+set_io {ARTIX_HEARTBEAT} -IOSTD LVCMOS33
+
+## KILL_PIN_OUT: PolarFire'dan Artix'e counter-strike sinyali
+## Hedef: Artix PROGRAM_B pini VEYA power regulator ENABLE pini
+set_io {KILL_PIN_OUT} -pinname C14 -fixed yes -DIRECTION OUTPUT
+set_io {KILL_PIN_OUT} -IOSTD LVCMOS33 -OUT_DRIVE 12 -SLEW Fast
+
+################################################################################
+## WATCHDOG TİMİNG CONSTRAINTS
+################################################################################
+## watchdog_monitor: Asenkron giriş (ARTIX_HEARTBEAT) için CDC
+##
+## CDC Synchronizer için max delay constraint
+## heartbeat_sync register zinciri: 2-stage, max delay <5ns
+################################################################################
+
+# ARTIX_HEARTBEAT asenkron girişi (CDC gerekiyor)
+set_false_path -from [get_ports {ARTIX_HEARTBEAT}]
+
+# Watchdog kill_trigger çıkışı (asenkron - KILL_PIN_OUT'a gidiyor)
+set_false_path -from [get_pins {watchdog_inst/kill_trigger*}]
+
+################################################################################
+## PLL LOCKED SİNYALİ (Asenkron)
+################################################################################
+## polarfire_clocking modülünden gelen pll_locked sinyali
+## system_supervisor'a asenkron olarak gidiyor
+################################################################################
+
+set_false_path -from [get_pins {clk_inst/pll_locked_int*}]
+
+################################################################################
+## NOT: Bu dosya FAZ 5 için güncellenmiştir.
+##      ARTIX_HEARTBEAT ve KILL_PIN_OUT pinleri PCB şemasına göre
+##      belirlenmiş placeholder değerlerdir. Gerçek PCB geldiğinde
+##      pin numaraları güncellenmelidir!
+################################################################################
+
+################################################################################
+## V14: SPI COMMAND SLAVE INTERFACE
+################################################################################
+## PolarFire ↔ Artix-7 SPI iletişimi (CMD slave)
+## !! PIN NUMARALARI PLACEHOLDER — PCB şemasından güncelle !!
+################################################################################
+
+set_io {SPI_CS_N_PIN}     -pinname D15 -fixed yes -DIRECTION INPUT
+set_io {SPI_CS_N_PIN}     -IOSTD LVCMOS33
+
+set_io {SPI_MOSI_PIN}     -pinname E15 -fixed yes -DIRECTION INPUT
+set_io {SPI_MOSI_PIN}     -IOSTD LVCMOS33
+
+set_io {SPI_SCLK_PIN}     -pinname F14 -fixed yes -DIRECTION INPUT
+set_io {SPI_SCLK_PIN}     -IOSTD LVCMOS33
+
+set_io {SPI_MISO_PIN}     -pinname G14 -fixed yes -DIRECTION OUTPUT
+set_io {SPI_MISO_PIN}     -IOSTD LVCMOS33
+
+## SPI asenkron sinyalleri (CDC synchronizer RTL'de mevcut)
+set_false_path -from [get_ports {SPI_SCLK_PIN}]
+set_false_path -from [get_ports {SPI_MOSI_PIN}]
+set_false_path -from [get_ports {SPI_CS_N_PIN}]
+
+################################################################################
+## V14 EKLENTİ SONU
+################################################################################

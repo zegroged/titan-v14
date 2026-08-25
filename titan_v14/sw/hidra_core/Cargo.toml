@@ -1,0 +1,52 @@
+[package]
+name = "hidra_core"
+description = "PROJECT HİDRA — Paranoid-Grade Crypto Core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+# Layer 1: AES-256-GCM-SIV (nonce-misuse resistant AEAD)
+aes-gcm-siv = { workspace = true }
+
+# Layer 3: XChaCha20-Poly1305 (transport, 192-bit nonce)
+chacha20poly1305 = { workspace = true }
+
+# Hybrid Key Exchange: X25519 (classical) + Kyber-768 (post-quantum)
+x25519-dalek = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+pqcrypto-traits = { workspace = true }
+
+# Key Derivation (HKDF-SHA256)
+hkdf = { workspace = true }
+sha2 = { workspace = true }
+
+# Randomness
+rand = { workspace = true }
+rand_core = { workspace = true }
+
+# Memory safety
+zeroize = { workspace = true }
+subtle = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+bincode = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# HMAC + AES-CTR for sim mode and heartbeat auth
+hmac = { workspace = true }
+aes = { workspace = true }
+ctr = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+# Platform (Linux spidev ioctl)
+libc = { workspace = true }
+
+[dev-dependencies]
+hex = "0.4"
+proptest = "1.4"

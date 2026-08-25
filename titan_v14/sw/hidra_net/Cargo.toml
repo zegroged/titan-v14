@@ -1,0 +1,39 @@
+[package]
+name = "hidra_net"
+description = "PROJECT HİDRA — Network Layer (Hydra MQTT + Ghost Link Tor)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+hidra_core = { path = "../hidra_core" }
+tokio = { workspace = true }
+log = { workspace = true }
+anyhow = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+chacha20poly1305 = { workspace = true }
+hmac = { workspace = true }
+base64 = { workspace = true }
+rumqttc = { workspace = true }
+tokio-socks = { workspace = true }
+x25519-dalek = { workspace = true }
+hkdf = { workspace = true }
+zeroize = { workspace = true }
+rand_core = { workspace = true }
+pqcrypto-kyber = { workspace = true }
+pqcrypto-traits = { workspace = true }
+subtle = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+
+[[example]]
+name = "mqtt_real_test"
+path = "examples/mqtt_real_test.rs"
+
+[[example]]
+name = "tor_real_test"
+path = "examples/tor_real_test.rs"

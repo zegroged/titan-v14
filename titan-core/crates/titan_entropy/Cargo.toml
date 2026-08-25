@@ -1,0 +1,8 @@
+[package]
+name = "titan_entropy"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+rand = { workspace = true }
+zeroize = { workspace = true }

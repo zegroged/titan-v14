@@ -1,0 +1,9 @@
+[package]
+name = "titan_dilithium"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+pqcrypto-dilithium = "0.5"
+pqcrypto-traits = "0.3"
+zeroize = { workspace = true }

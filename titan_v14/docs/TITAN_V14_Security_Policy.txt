@@ -1,0 +1,311 @@
+================================================================================
+            TITAN V14 CRYPTOGRAPHIC MODULE — SECURITY POLICY
+                   (FIPS 140-3 Level 3 Hedef)
+================================================================================
+                       SÜRÜM: 1.0 — 9 Şubat 2026
+                       GİZLİLİK: RESTRICTED
+================================================================================
+
+1. MODÜL TANIMI
+================================================================================
+Modül Adı    : TITAN V14 Secure Communication Terminal
+Tür          : Donanım Kriptografik Modül (Dual-FPGA)
+Platform     : Xilinx Artix-7 XC7A100T + Microchip PolarFire
+Hedef Seviye : FIPS 140-3 Level 3
+Sürüm        : V14 (Build 20260209)
+
+Amaç:
+  İki TITAN cihazı arasında tam donanım seviyesinde şifreli iletişim sağlar.
+  Yazılım katmanı yoktur — tüm kriptografik işlemler FPGA gate'lerinde yapılır.
+
+================================================================================
+2. KRİPTOGRAFİK SINIRLAR (CRYPTOGRAPHIC BOUNDARY)
+================================================================================
+
+Fiziksel Sınır:
+  - Artix-7 FPGA çip paketi (CSG324)
+  - PCB üzerinde tamper mesh (opsiyonel genişleme)
+  - Epoksi kaplama (üretim aşaması)
+
+Mantıksal Sınır:
+  ┌─────────────────────────────────────────────────────┐
+  │  KRIPTOGRAFIK MODÜL                                 │
+  │                                                     │
+  │  ┌──────────────┐  ┌──────────────┐                 │
+  │  │ AES-256 Core │  │ TRNG Engine  │                 │
+  │  │ (14-round)   │  │ (3x Ring Osc)│                 │
+  │  └──────────────┘  └──────────────┘                 │
+  │                                                     │
+  │  ┌──────────────┐  ┌──────────────┐                 │
+  │  │ Key Loader   │  │ Kill Protocol│                 │
+  │  │ (SPI)        │  │ (Zeroize)    │                 │
+  │  └──────────────┘  └──────────────┘                 │
+  │                                                     │
+  │  ┌──────────────┐  ┌──────────────┐                 │
+  │  │ Comm Protocol│  │ POST Self-   │                 │
+  │  │ (Full-Duplex)│  │ Test Engine  │                 │
+  │  └──────────────┘  └──────────────┘                 │
+  │                                                     │
+  │  ┌──────────────┐  ┌──────────────┐                 │
+  │  │ Omega Cloak  │  │ AEGIS AI     │                 │
+  │  │ (DPA Shield) │  │ (Anomaly Det)│                 │
+  │  └──────────────┘  └──────────────┘                 │
+  └─────────────────────────────────────────────────────┘
+
+================================================================================
+3. ONAYLANMIŞ ALGORİTMALAR
+================================================================================
+
+┌────────────────────┬───────────────┬──────────────────────┐
+│ Algoritma          │ Standart      │ Kullanım             │
+├────────────────────┼───────────────┼──────────────────────┤
+│ AES-256-CTR        │ FIPS 197      │ Veri şifreleme       │
+│ AES-256 (CBC-MAC)  │ SP 800-38A    │ Mesaj doğrulama      │
+│ TRNG               │ SP 800-90B    │ Entropi kaynağı      │
+│ Key Derivation     │ —             │ IV = K₁ ⊕ K₂ ⊕ sess │
+└────────────────────┴───────────────┴──────────────────────┘
+
+NOT: Key derivation fonksiyonu özel tasarımdır. CAVP validasyonuna tabi.
+
+================================================================================
+4. GÜVENLİK SEVİYELERİ (FIPS 140-3)
+================================================================================
+
+┌────────────────────────────┬────────┬────────────────────────────┐
+│ Alan                       │ Seviye │ Açıklama                   │
+├────────────────────────────┼────────┼────────────────────────────┤
+│ Kriptografik modül spec    │ 3      │ Tam donanım, SW yok        │
+│ Kriptografik modül portlar │ 3      │ RED/BLACK fiziksel ayrım   │
+│ Rol ve servisler           │ 3      │ Factory/Armed modlar       │
+│ Sonlu durum modeli         │ 3      │ Belgelenmiş FSM'ler        │
+│ Fiziksel güvenlik          │ 3      │ Tamper + zeroize + eFUSE   │
+│ İşletim ortamı             │ N/A    │ Genel amaçlı OS yok        │
+│ Kriptografik anahtar yön.  │ 3      │ Volatile + SPI + kill      │
+│ EMI/EMC                    │ 3      │ Omega DPA koruması         │
+│ Self-test                  │ 3      │ POST + continuous TRNG     │
+│ Yaşam döngüsü güvencesi    │ 3      │ eFUSE + bitstream encrypt  │
+│ Diğer saldırı azaltma      │ 3      │ AEGIS + PVT + anti-replay  │
+└────────────────────────────┴────────┴────────────────────────────┘
+
+================================================================================
+5. PORTLAR VE ARAYÜZLER
+================================================================================
+
+5.1 Veri Giriş (Data Input)
+  - RED UART RX     : Plaintext veri girişi (PC'den)
+  - BLACK UART RX   : Ciphertext veri girişi (kabloludan)
+  - SPI MOSI        : 256-bit key injection
+
+5.2 Veri Çıkış (Data Output)
+  - RED UART TX     : Decrypted plaintext çıkışı (PC'ye)
+  - BLACK UART TX   : Encrypted ciphertext çıkışı (kabloya)
+
+5.3 Kontrol Giriş (Control Input)
+  - KILL_PIN        : Fiziksel tamper tetikleme
+  - JUMPER_CALIB    : Factory/Armed mod seçimi
+  - COMM_MODE_PIN   : TX/RX mod seçimi
+  - OMEGA_ENABLE    : DPA koruması açma/kapama
+  - AEGIS_ENABLE    : AI anomaly tespit açma/kapama
+  - SPI_CS_N/SCLK   : Key loading kontrol
+
+5.4 Durum Çıkış (Status Output)
+  - LED_STATUS_GREEN : Sistem hazır / heartbeat
+  - LED_STATUS_RED   : Tamper alarm / kill aktif
+  - LED_POST_FAIL    : POST self-test başarısız
+  - LED_OMEGA_ACTIVE : DPA koruması aktif
+  - PF_KILL_CMD     : PolarFire'a kill komutu
+
+================================================================================
+6. ROLLER VE SERVİSLER
+================================================================================
+
+6.1 Crypto Officer Rolü:
+  - Key injection (SPI üzerinden)
+  - Factory→Armed geçişi (JUMPER_CALIB)
+  - Mod seçimi (COMM_MODE_PIN)
+  - Kill komutu (fiziksel bir)
+
+6.2 User Rolü:
+  - Veri gönderme (RED UART RX)
+  - Veri alma (RED UART TX)
+  - Durum okuma (LED'ler)
+
+6.3 Servisler:
+  ┌──────────────────────┬─────────┬──────┬──────────────────┐
+  │ Servis               │ Officer │ User │ Açıklama         │
+  ├──────────────────────┼─────────┼──────┼──────────────────┤
+  │ Key Load             │ ✓       │      │ SPI ile 256-bit  │
+  │ Encrypt/Send         │         │ ✓    │ TX mode          │
+  │ Receive/Decrypt      │         │ ✓    │ RX mode          │
+  │ Zeroize              │ ✓       │      │ Kill chain       │
+  │ Self-Test            │ Auto    │      │ POST otomatik    │
+  │ Status               │ ✓       │ ✓    │ LED okuma        │
+  └──────────────────────┴─────────┴──────┴──────────────────┘
+
+================================================================================
+7. ANAHTAR YÖNETİMİ
+================================================================================
+
+7.1 Anahtar Türleri:
+  ┌──────────┬─────────┬────────────┬──────────────────────────┐
+  │ Anahtar  │ Uzunluk │ Depolama   │ Yaşam Süresi             │
+  ├──────────┼─────────┼────────────┼──────────────────────────┤
+  │ AES Key  │ 256-bit │ SRAM (vol) │ Key load → zeroize/power │
+  │ eFUSE Key│ 256-bit │ eFUSE (OTP)│ Kalıcı (silinmez)        │
+  │ Session  │ 32-bit  │ Register   │ Per-session (volatile)    │
+  └──────────┴─────────┴────────────┴──────────────────────────┘
+
+7.2 Anahtar Enjeksiyonu:
+  - Yöntem: SPI (MOSI → key_loader_spi modülü)
+  - 256 bit tek seferde yüklenir
+  - Yükleme sırasında key_valid='0' → şifreleme engellenir
+  - Yükleme tamamlanınca key_valid='1' → session_counter artar
+
+7.3 Anahtar Silme (Zeroization):
+  Tetikleyiciler (4 kaynak, OR mantığı):
+    1. KILL_PIN      — Fiziksel tamper
+    2. Watchdog      — PolarFire heartbeat kaybı
+    3. AEGIS         — AI anomaly tespiti
+    4. PVT           — Voltaj/sıcaklık saldırısı
+
+  Silme Prosedürü:
+    Stage 1: FDPE dead_latch SET (geri dönüşsüz)
+    Stage 2: Tüm key register'lar <= x"00..00"
+    Stage 3: Tüm data buffer'lar <= x"00..00"
+    Stage 4: FSM'ler <= IDLE, key_valid <= '0'
+    Süre: <1 clock cycle (asenkron)
+
+================================================================================
+8. SELF-TEST
+================================================================================
+
+8.1 Power-On Self-Test (POST):
+  ┌────────────────────┬───────────────────────────────────┐
+  │ Test               │ Açıklama                          │
+  ├────────────────────┼───────────────────────────────────┤
+  │ AES-256 KAT        │ NIST vektörü ile bilinen cevap    │
+  │                    │ PT: 0x0011..FF                    │
+  │                    │ Key: 0x0001..1F                   │
+  │                    │ CT: beklenen değer ile karşılaştır│
+  ├────────────────────┼───────────────────────────────────┤
+  │ TRNG Repetition    │ 1024 cycle 0x00 veya 0xFF →FAIL  │
+  └────────────────────┴───────────────────────────────────┘
+
+  POST FAIL → system_ready=0 → tüm kriptografik servisler engellenir
+  POST FAIL → LED_POST_FAIL='1' (kalıcı, reset gerektirir)
+
+8.2 Continuous Tests (SP 800-90B):
+  ┌────────────────────┬───────────────────────────────────┐
+  │ Test               │ Açıklama                          │
+  ├────────────────────┼───────────────────────────────────┤
+  │ Monobit            │ 128-bit pencerede 48-80 arası '1' │
+  │ Runs               │ Ardışık aynı bit ≤9              │
+  │ Stuck-bit          │ Ring osc toggle sayısı >0         │
+  └────────────────────┴───────────────────────────────────┘
+
+================================================================================
+9. FİZİKSEL GÜVENLİK
+================================================================================
+
+9.1 Tamper Response:
+  - KILL_PIN → asenkron zeroization (<1 ns)
+  - Dead latch (FDPE) → geri dönüşsüz, reset bile kurtarmaz
+  - Factory mode: kill bypass (test ortamı)
+  - Armed mode: kill aktif (production)
+
+9.2 Bitstream Koruması:
+  - AES-256 encrypted bitstream (eFUSE key)
+  - JTAG readback disabled
+  - Lab tools access disabled
+
+9.3 Side-Channel Koruması:
+  - Omega Cloak: Random stall injection (DPA koruması)
+  - Shadow datapath: Dummy operations
+  - Jittered clock: Opsiyonel
+
+9.4 Çevresel Saldırı Tespiti:
+  - PVT Monitor: ±10% voltaj/sıcaklık alarm
+  - Clock glitch: PLL filter (system_supervisor)
+  - Ring oscillator frequency monitoring
+
+================================================================================
+10. SONLU DURUM MODELİ
+================================================================================
+
+10.1 Sistem FSM:
+  POWER_ON → POST_TEST → [PASS] → IDLE → KEY_LOADED → OPERATIONAL
+                       → [FAIL] → HALTED (kalıcı)
+
+  OPERATIONAL → KILL → ZEROIZED (geri dönüşsüz)
+
+10.2 TX FSM (Full-Duplex):
+  TX_IDLE → TX_COLLECT → TX_ENCRYPT → TX_WAIT_AES → TX_MAC_UPDATE
+  → TX_WAIT_MAC → TX_NEXT_BLOCK → TX_SEND_SOF → TX_SEND_SEQ
+  → TX_SEND_NBLK → TX_SEND_CT → TX_SEND_MAC → TX_DONE → TX_IDLE
+
+10.3 RX FSM (Full-Duplex):
+  RX_IDLE → RX_SYNC → RX_SEQ → RX_NBLK → RX_COLLECT_CT
+  → RX_DECRYPT → RX_WAIT_AES → RX_MAC_UPDATE → RX_WAIT_MAC
+  → RX_NEXT_BLOCK → RX_COLLECT_MAC → RX_CHECK_MAC → RX_OUTPUT
+  → RX_DONE → RX_IDLE
+
+10.4 Kill FSM:
+  ALIVE → TRIGGERED → WIPE_KEYS → WIPE_DATA → DEAD (kalıcı)
+
+================================================================================
+11. WIRE FORMAT (Protokol Yapısı)
+================================================================================
+
+Tek Blok (16 byte payload):
+  [SOF: 4B] [SEQ: 4B] [NBLK: 1B] [CT: 16B] [MAC: 16B] = 41 byte
+
+Çoklu Blok (N × 16 byte payload, N=1..16):
+  [SOF: 4B] [SEQ: 4B] [NBLK: 1B] [CT₁: 16B] ... [CTₙ: 16B] [MAC: 16B]
+  Toplam: 4 + 4 + 1 + N×16 + 16 = 25 + N×16 byte
+
+MAC Hesabı (CBC-MAC):
+  Block₁: AES(Key, PT₁ ⊕ SeqNum ⊕ 0)
+  Block₂: AES(Key, PT₂ ⊕ SeqNum ⊕ Block₁_MAC)
+  ...
+  Final MAC = son AES çıkışı (128-bit)
+
+================================================================================
+12. SERTİFİKASYON YOLU
+================================================================================
+
+Aşama 1: CAVP (Cryptographic Algorithm Validation)
+  - AES-256 test vectors (encrypt/decrypt)
+  - TRNG SP 800-90B entropy assessment
+  - Tahmini süre: 2-4 ay
+  - Tahmini maliyet: $10K-$30K
+
+Aşama 2: CMVP (Cryptographic Module Validation)
+  - Akredite laboratuvar seçimi
+  - test raporları + bu Security Policy
+  - Tahmini süre: 6-18 ay
+  - Tahmini maliyet: $100K-$250K
+
+Aşama 3: NIST Onayı
+  - Laboratuvar raporu review
+  - Sertifika yayınlama
+  - Tahmini süre: 3-12 ay (kuyruk)
+
+================================================================================
+13. SENTEZ METRİKLERİ (Final Build — 9 Şubat 2026)
+================================================================================
+
+  Platform     : Artix-7 XC7A100T-1CSG324
+  Clock        : 50 MHz (20ns period)
+  Errors       : 0
+  Critical Warn: 3 (TRNG combinatorial loops — by design)
+  Latches      : 0
+  Timing       : All user specified constraints met
+  Slice LUTs   : 10,484 / 63,400 (16.54%)
+  Flip-Flops   : 9,729 / 126,800 (7.67%)
+  BRAM         : ~4 / 270 (~1.5%)
+  DSP          : 0 / 240 (0%)
+  Free capacity: >83% — genişleme için bol alan
+
+================================================================================
+                     SON — GİZLİ BELGE
+================================================================================

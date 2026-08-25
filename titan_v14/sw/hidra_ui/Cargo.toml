@@ -1,0 +1,19 @@
+[package]
+name = "hidra_ui"
+description = "PROJECT HİDRA — Terminal UI (ratatui)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+hidra_core = { path = "../hidra_core" }
+hidra_net = { path = "../hidra_net" }
+tokio = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+anyhow = { workspace = true }
+rand = { workspace = true }
+ratatui = "0.29"
+crossterm = "0.28"
+chrono = "0.4"
+hkdf = { workspace = true }
+sha2 = { workspace = true }

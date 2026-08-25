@@ -1,0 +1,8 @@
+[package]
+name = "titan_sentry"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+rand = { workspace = true }
+titan_entropy = { path = "../titan_entropy" }

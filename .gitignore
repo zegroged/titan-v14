@@ -1,0 +1,80 @@
+# ---------------------------------------------------------------------------
+# TITAN — FPGA donanım güvenlik modülü
+#
+# Kural: KAYNAK depoda kalır (VHDL, Rust, kısıt dosyaları, testbench),
+# ÜRETİLEN her şey kalmaz (sentez çıktısı, simülasyon artığı, derleme hedefi).
+# ---------------------------------------------------------------------------
+
+# --- Rust ---
+target/
+**/target/
+Cargo.lock.bak
+*.rlib
+*.rmeta
+
+# --- GHDL / VHDL simülasyon artıkları ---
+*.o
+*.cf
+work-obj*.cf
+*.ghw
+*.vcd
+*.fst
+*.exe
+
+# --- Vivado / Xilinx ---
+*.jou
+*.log
+*.str
+*.zip
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.srcs/**/ipshared/
+*.gen/
+vivado*.backup.jou
+vivado*.backup.log
+webtalk*.jou
+webtalk*.log
+usage_statistics_webtalk*
+.jobs/
+
+# --- Libero / PolarFire ---
+*.prjx
+component/
+designer/
+simulation/
+smartgen/
+synthesis/
+
+# --- Sentez/implementasyon raporları (üretilir; örnekler docs/ altında tutulur) ---
+*.rpt
+*.rpx
+*.dcp
+*.bit
+*.bin
+*.mcs
+*.ltx
+
+# --- Ortam ve sırlar ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# --- Editör / işletim sistemi ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Geliştirme aracı artıkları ---
+.claude/
+CLAUDE.md
+AGENTS.md
+.cursor/

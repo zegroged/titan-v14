@@ -1,0 +1,9 @@
+[package]
+name = "titan_kyber"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+pqcrypto-kyber = "0.8"
+pqcrypto-traits = "0.3"
+zeroize = { workspace = true }
