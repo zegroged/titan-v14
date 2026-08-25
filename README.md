@@ -1,13 +1,15 @@
 # TITAN V14
 
-> An FPGA-based hardware security module: custom AES-256, ring-oscillator TRNG, and side-channel countermeasures in VHDL, paired with a post-quantum cryptography stack in Rust.
+> An FPGA-based hardware security module: custom AES-256 with a masked S-box, ring-oscillator TRNG, and side-channel countermeasures in VHDL — verified with PSL assertions and attacked with simulated CPA — paired with a post-quantum cryptography stack in Rust.
 
 **Turkish README:** [README.tr.md](README.tr.md)
 
 ![VHDL](https://img.shields.io/badge/VHDL-174%20files-blue)
 ![Rust](https://img.shields.io/badge/Rust-11%20crates-orange)
 ![Target](https://img.shields.io/badge/Target-Artix--7%20XC7A100T%20%2B%20PolarFire-lightgrey)
-![Simulation](https://img.shields.io/badge/GHDL-13%2F13%20testbenches%20pass-brightgreen)
+![Tests](https://img.shields.io/badge/GHDL-13%2F13%20pass%2C%20100%25%20coverage-brightgreen)
+![Formal](https://img.shields.io/badge/PSL%20assertions-6%2F6%20pass-brightgreen)
+![CPA](https://img.shields.io/badge/CPA%20attack-defended%20(sim)-brightgreen)
 ![Synthesis](https://img.shields.io/badge/Vivado-synthesized%2C%206.5%25%20of%20XC7A100T-brightgreen)
 ![Status](https://img.shields.io/badge/Status-never%20fabricated-yellow)
 ![License](https://img.shields.io/badge/License-MIT-blue)
@@ -108,6 +110,31 @@ testbenches passing, including the Artix-7 top-level integration test.
 A second workspace, `titan_v14/sw/`, holds the host-side tools: `hidra_core` (with a
 fuzzing harness), `hidra_net`, `hidra_sim`, `hidra_e2e`, and `hidra_ui`.
 
+### Verification
+
+Everything below is simulation-level, but it goes further than "the testbenches pass."
+All reports are in [`titan_v14/reports/`](titan_v14/reports/).
+
+| Report | What was done | Result |
+| --- | --- | --- |
+| [CPA attack](titan_v14/reports/CPA_ATTACK_REPORT.md) | Correlation power analysis against `aes256_core` byte 0 — 256 traces, Hamming-weight leakage model on the S-box output, run at five noise levels (σ = 0 … 4) | The attack recovered the wrong key byte at every noise level. Masking held. |
+| [Formal verification](titan_v14/reports/FORMAL_VERIFICATION_REPORT.md) | PSL assertions over the 17-state AES FSM: fault stickiness, kill-zeroes, no-output-under-fault, FSM validity, spurious-start survival, bounded completion | 6/6 pass; completion bounded at 258 cycles against a 500-cycle limit |
+| [Second-order masking](titan_v14/reports/SECOND_ORDER_MASKING_REPORT.md) | DRBG-to-mask bridge, mask independence measured by Hamming weight, mask dynamism across encryptions | Seeding, independence, and dynamism pass; two NIST-vector tests fail *by construction* because a dynamic mask cannot match a fixed vector — documented as expected |
+| [TRNG entropy](titan_v14/reports/TRNG_ENTROPY_REPORT.md) | NIST SP 800-90B (simplified) over 131,072 simulated bits | 2/6 pass — **and that is the correct outcome**, see below |
+| [Functional coverage](titan_v14/reports/GHDL_COVERAGE_REPORT.md) | GHDL 5.1.1, VHDL-2008 | 13/13 testbenches, 100% of declared scenarios exercised |
+
+The TRNG result is worth reading in full, because a failing entropy test looks alarming
+until you see why: GHDL cannot model the physical jitter of a ring oscillator. In
+simulation the three ring oscillators run at exactly their nominal frequencies, so the
+output is deterministic and the monobit, runs, chi-square, and min-entropy tests fail
+by construction. Serial correlation and autocorrelation — the two tests that measure
+structure rather than randomness — pass at r = 0.000000. The report says this plainly
+rather than hiding the failures.
+
+The CPA report carries the same kind of note: glitch-based leakage does not exist in a
+functional simulation, so a defended result there does not prove a defended result on
+silicon.
+
 ### Documents
 
 `titan_v14/docs/` contains the design material that usually does not survive a hobby
@@ -148,20 +175,26 @@ hardware.
 
 1. **No silicon validation.** Synthesis is done and utilisation is known (see Status),
    but nothing has run on a real part. Real throughput is unmeasured.
-2. **Timing is unverified, and the reason is in the report.** `timing_summary.rpt`
-   states *"There are no user specified timing constraints"* — WNS and TNS come back
-   as NA. The design was synthesized without an XDC clock constraint, so the maximum
-   frequency it can actually close at is unknown. Writing proper constraints and
-   re-running synthesis is a small job and should be done before any board work.
-3. **The TRNG's entropy has never been measured.** This is the most important gap.
-   A ring-oscillator TRNG's whole value is physical randomness; simulating it proves
-   nothing, because a simulated oscillator is deterministic. Running it on real
-   silicon and putting the output through NIST SP 800-22 or dieharder is the first
-   thing that should happen to this design.
-4. **The side-channel countermeasures are untested against real attacks.** Masking,
-   dummy operations, and jitter injection are implemented, but no power traces have
-   ever been captured. A countermeasure that has not faced an oscilloscope is a
-   hypothesis.
+2. **Timing has not been closed, but the constraints exist.** The reports in this
+   repository come from *out-of-context* synthesis runs, which is why
+   `timing_summary.rpt` says *"There are no user specified timing constraints"* and
+   returns NA for WNS and TNS. The real constraints are written —
+   `rtl/artix7/master_constraints.xdc` declares a 50 MHz system clock — and
+   `scripts/build_artix7.tcl` loads them, but that full in-context build was never
+   run to completion. Running it is the cheapest remaining task in this project and
+   would produce the one number missing from the Status table: the frequency the
+   design actually closes at.
+3. **The TRNG's entropy has been tested, but only where testing cannot work.** The
+   NIST SP 800-90B run over 131,072 simulated bits is in the repository, and four of
+   its six tests fail because a simulated ring oscillator has no physical jitter. This
+   is the single most important remaining gap: a ring-oscillator TRNG's whole value is
+   physical randomness, and it can only be measured on silicon.
+4. **The side-channel countermeasures survived a simulated attack, not a real one.**
+   The CPA run against the AES core failed to recover the key at any noise level, which
+   is evidence that the masking is doing something. But functional simulation contains
+   no glitch leakage, no EM emission, and no measurement noise from a real probe. Until
+   power traces are captured off a board, the countermeasures are supported by
+   simulation rather than proven against hardware.
 5. **The PolarFire half was never built.** Only the Artix-7 side has RTL. The
    supervisory device exists in the design documents.
 6. **The AES core is not a certified implementation.** It passes known-answer tests
@@ -175,16 +208,17 @@ hardware.
 
 Two things, in order.
 
-**Write the timing constraints.** The design synthesizes but has no XDC clock
-constraint, so its maximum frequency is unknown. This costs nothing but time and
-turns an NA in the report into a number.
+**Run the full in-context build.** `scripts/build_artix7.tcl` already loads
+`master_constraints.xdc` with its 50 MHz clock and already calls
+`report_timing_summary`. Running it to completion costs a Vivado session and turns
+the NA in the timing report into a real WNS figure.
 
 **Then get a development board.** An Artix-7 board carrying the XC7A100T — the same
 part this design already synthesizes for, at 6.5% utilisation — costs a few hundred
 dollars, not the price of a custom dual-FPGA board. That closes the two gaps that
-matter most: measuring the TRNG's actual entropy against NIST SP 800-22, and
-capturing power traces to find out whether the masking and jitter countermeasures
-do anything real.
+simulation structurally cannot: measuring the TRNG's real entropy against
+NIST SP 800-90B on physical jitter, and capturing power traces to test the masking
+against glitch leakage that no functional simulator produces.
 
 ---
 
