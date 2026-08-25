@@ -1,0 +1,48 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (win64) Build 6299465 Fri Nov 14 19:35:11 GMT 2025
+| Date         : Mon Feb  9 02:23:21 2026
+| Host         : DESKTOP-04PMP17 running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -file C:/Temp/aegis_build/reports/utilization_hierarchical.rpt
+| Design       : artix7_top_v14
+| Device       : xc7a100tcsg324-1
+| Speed File   : -1
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+|            Instance           |       Module       | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++-------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+| artix7_top_v14                |              (top) |       4098 |       4098 |       0 |    0 | 3959 |      0 |      0 |          0 |
+|   (artix7_top_v14)            |              (top) |         22 |         22 |       0 |    0 |   28 |      0 |      0 |          0 |
+|   aegis_inst                  |          aegis_top |         95 |         95 |       0 |    0 |   73 |      0 |      0 |          0 |
+|     u_anomaly                 |   anomaly_detector |         67 |         67 |       0 |    0 |    9 |      0 |      0 |          0 |
+|   aes_inst                    |   aes_core_wrapper |       2047 |       2047 |       0 |    0 | 2305 |      0 |      0 |          0 |
+|     (aes_inst)                |   aes_core_wrapper |        255 |        255 |       0 |    0 |  385 |      0 |      0 |          0 |
+|     key_store_inst            | secure_key_storage |       1792 |       1792 |       0 |    0 | 1920 |      0 |      0 |          0 |
+|   gearbox_inst                |       data_gearbox |         70 |         70 |       0 |    0 |  395 |      0 |      0 |          0 |
+|   loader_inst                 |     key_loader_spi |          2 |          2 |       0 |    0 |  257 |      0 |      0 |          0 |
+|   omega_inst                  |    omega_cloak_top |       1256 |       1256 |       0 |    0 |  195 |      0 |      0 |          0 |
+|     u_prng                    |       chaotic_prng |       1231 |       1231 |       0 |    0 |  172 |      0 |      0 |          0 |
+|   pvt_inst                    |    pvt_monitor_top |        324 |        324 |       0 |    0 |  378 |      0 |      0 |          0 |
+|     (pvt_inst)                |    pvt_monitor_top |         40 |         40 |       0 |    0 |   90 |      0 |      0 |          0 |
+|     gen_counters[0].u_counter |   ring_osc_counter |         55 |         55 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[1].u_counter | ring_osc_counter_2 |        116 |        116 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[2].u_counter | ring_osc_counter_3 |         58 |         58 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[3].u_counter | ring_osc_counter_4 |         55 |         55 |       0 |    0 |   72 |      0 |      0 |          0 |
+|   trng_inst                   |       trng_wrapper |         73 |         73 |       0 |    0 |  129 |      0 |      0 |          0 |
+|     (trng_inst)               |       trng_wrapper |         60 |         60 |       0 |    0 |  129 |      0 |      0 |          0 |
+|   uart_drv_inst               |        uart_driver |         54 |         54 |       0 |    0 |   59 |      0 |      0 |          0 |
+|   uart_telem_inst             |     uart_telemetry |         71 |         71 |       0 |    0 |   62 |      0 |      0 |          0 |
++-------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+
+

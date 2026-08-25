@@ -1,0 +1,63 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (win64) Build 6299465 Fri Nov 14 19:35:11 GMT 2025
+| Date         : Mon Feb  9 15:15:24 2026
+| Host         : DESKTOP-04PMP17 running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -file C:/Temp/aegis_build/reports_aes/utilization_hierarchical.rpt
+| Design       : artix7_top_v14
+| Device       : xc7a100tcsg324-1
+| Speed File   : -1
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++--------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+|            Instance            |       Module       | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++--------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+| artix7_top_v14                 |              (top) |       4183 |       4183 |       0 |    0 | 3162 |      0 |      0 |          0 |
+|   (artix7_top_v14)             |              (top) |         19 |         19 |       0 |    0 |   28 |      0 |      0 |          0 |
+|   aegis_inst                   |          aegis_top |         95 |         95 |       0 |    0 |   73 |      0 |      0 |          0 |
+|     u_anomaly                  |   anomaly_detector |         67 |         67 |       0 |    0 |    9 |      0 |      0 |          0 |
+|   aes_inst                     |   aes_core_wrapper |       2131 |       2131 |       0 |    0 | 1507 |      0 |      0 |          0 |
+|     (aes_inst)                 |   aes_core_wrapper |        132 |        132 |       0 |    0 |  391 |      0 |      0 |          0 |
+|     aes_inst                   |        aes256_core |       1999 |       1999 |       0 |    0 | 1116 |      0 |      0 |          0 |
+|       (aes_inst)               |        aes256_core |        141 |        141 |       0 |    0 |  396 |      0 |      0 |          0 |
+|       key_exp_inst             |     aes_key_expand |       1109 |       1109 |       0 |    0 |  462 |      0 |      0 |          0 |
+|         (key_exp_inst)         |     aes_key_expand |        561 |        561 |       0 |    0 |  430 |      0 |      0 |          0 |
+|         gen_sub[0].sbox_inst   |        aes_sbox_20 |        140 |        140 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sub[1].sbox_inst   |        aes_sbox_21 |        136 |        136 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sub[2].sbox_inst   |        aes_sbox_22 |        136 |        136 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sub[3].sbox_inst   |        aes_sbox_23 |        136 |        136 |       0 |    0 |    8 |      0 |      0 |          0 |
+|       round_inst               |          aes_round |        749 |        749 |       0 |    0 |  258 |      0 |      0 |          0 |
+|         (round_inst)           |          aes_round |          1 |          1 |       0 |    0 |  130 |      0 |      0 |          0 |
+|         gen_sbox[0].sbox_inst  |           aes_sbox |         59 |         59 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sbox[13].sbox_inst |         aes_sbox_8 |         59 |         59 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sbox[1].sbox_inst  |        aes_sbox_11 |         56 |         56 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sbox[4].sbox_inst  |        aes_sbox_14 |         56 |         56 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sbox[7].sbox_inst  |        aes_sbox_17 |         54 |         54 |       0 |    0 |    8 |      0 |      0 |          0 |
+|         gen_sbox[9].sbox_inst  |        aes_sbox_19 |         56 |         56 |       0 |    0 |    8 |      0 |      0 |          0 |
+|   gearbox_inst                 |       data_gearbox |         70 |         70 |       0 |    0 |  395 |      0 |      0 |          0 |
+|   loader_inst                  |     key_loader_spi |          1 |          1 |       0 |    0 |  257 |      0 |      0 |          0 |
+|   omega_inst                   |    omega_cloak_top |       1257 |       1257 |       0 |    0 |  196 |      0 |      0 |          0 |
+|     u_prng                     |       chaotic_prng |       1233 |       1233 |       0 |    0 |  173 |      0 |      0 |          0 |
+|   pvt_inst                     |    pvt_monitor_top |        324 |        324 |       0 |    0 |  378 |      0 |      0 |          0 |
+|     (pvt_inst)                 |    pvt_monitor_top |         40 |         40 |       0 |    0 |   90 |      0 |      0 |          0 |
+|     gen_counters[0].u_counter  |   ring_osc_counter |         55 |         55 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[1].u_counter  | ring_osc_counter_2 |        116 |        116 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[2].u_counter  | ring_osc_counter_3 |         58 |         58 |       0 |    0 |   72 |      0 |      0 |          0 |
+|     gen_counters[3].u_counter  | ring_osc_counter_4 |         55 |         55 |       0 |    0 |   72 |      0 |      0 |          0 |
+|   trng_inst                    |       trng_wrapper |         75 |         75 |       0 |    0 |  129 |      0 |      0 |          0 |
+|     (trng_inst)                |       trng_wrapper |         59 |         59 |       0 |    0 |  129 |      0 |      0 |          0 |
+|   uart_drv_inst                |        uart_driver |         54 |         54 |       0 |    0 |   59 |      0 |      0 |          0 |
+|   uart_telem_inst              |     uart_telemetry |         71 |         71 |       0 |    0 |   62 |      0 |      0 |          0 |
++--------------------------------+--------------------+------------+------------+---------+------+------+--------+--------+------------+
+
+

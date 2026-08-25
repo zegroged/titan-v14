@@ -8,16 +8,31 @@
 ![Rust](https://img.shields.io/badge/Rust-11%20crates-orange)
 ![Target](https://img.shields.io/badge/Target-Artix--7%20XC7A100T%20%2B%20PolarFire-lightgrey)
 ![Simulation](https://img.shields.io/badge/GHDL-13%2F13%20testbenches%20pass-brightgreen)
-![Status](https://img.shields.io/badge/Status-simulated%2C%20never%20fabricated-yellow)
+![Synthesis](https://img.shields.io/badge/Vivado-synthesized%2C%206.5%25%20of%20XC7A100T-brightgreen)
+![Status](https://img.shields.io/badge/Status-never%20fabricated-yellow)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
 ## Status — read this first
 
-This project was **designed and verified in simulation only. It was never built in
-silicon.** Every claim below is a simulation or synthesis result, not a measurement
-from working hardware.
+This project was **designed, simulated, and synthesized for its target part. It was
+never built in silicon.** Every claim below is a simulation or synthesis result, not
+a measurement from working hardware.
+
+The synthesis is real and the reports are in this repository. Vivado synthesized the
+top-level design `artix7_top_v14` for the Artix-7 XC7A100T:
+
+| Metric | Top level (`v14_ooc_synth`) | AES subsystem (`v14_aes_synth`) |
+| --- | --- | --- |
+| Slice LUTs | 4,098 (6.46%) | 4,183 (6.60%) |
+| Slice registers | 3,959 (3.12%) | 3,162 (2.49%) |
+| Block RAM | 0 | 0 |
+| DSP slices | 0 | 0 |
+
+The design fits in roughly 6.5% of the part and uses no block RAM or DSP slices — the
+AES datapath, the TRNG, and the countermeasure logic are all pure fabric. Reports:
+[`titan_v14/reports/`](titan_v14/reports/).
 
 It was an independent project, intended as a portfolio piece to approach a defense
 electronics company. It stopped when the cost of fabricating a single custom
@@ -105,7 +120,8 @@ security policy, and a cellular module engineering plan.
 
 ## Building
 
-Simulation only — no board is required to run the testbenches.
+No board is required — the testbenches run in simulation, and the synthesis reports
+already in `titan_v14/reports/` were produced by the Tcl flow below.
 
 ```bat
 :: VHDL simulation (GHDL) — Windows
@@ -130,32 +146,45 @@ that was never completed. Neither toolchain is required to run the simulations.
 These are the honest gaps. Most of them exist because the project stopped before
 hardware.
 
-1. **No silicon validation.** Everything is simulation and synthesis. Timing closure
-   at real clock rates, actual resource utilisation, and real throughput are unverified.
-2. **The TRNG's entropy has never been measured.** This is the most important gap.
+1. **No silicon validation.** Synthesis is done and utilisation is known (see Status),
+   but nothing has run on a real part. Real throughput is unmeasured.
+2. **Timing is unverified, and the reason is in the report.** `timing_summary.rpt`
+   states *"There are no user specified timing constraints"* — WNS and TNS come back
+   as NA. The design was synthesized without an XDC clock constraint, so the maximum
+   frequency it can actually close at is unknown. Writing proper constraints and
+   re-running synthesis is a small job and should be done before any board work.
+3. **The TRNG's entropy has never been measured.** This is the most important gap.
    A ring-oscillator TRNG's whole value is physical randomness; simulating it proves
    nothing, because a simulated oscillator is deterministic. Running it on real
    silicon and putting the output through NIST SP 800-22 or dieharder is the first
    thing that should happen to this design.
-3. **The side-channel countermeasures are untested against real attacks.** Masking,
+4. **The side-channel countermeasures are untested against real attacks.** Masking,
    dummy operations, and jitter injection are implemented, but no power traces have
    ever been captured. A countermeasure that has not faced an oscilloscope is a
    hypothesis.
-4. **The PolarFire half was never built.** Only the Artix-7 side has RTL. The
+5. **The PolarFire half was never built.** Only the Artix-7 side has RTL. The
    supervisory device exists in the design documents.
-5. **The AES core is not a certified implementation.** It passes known-answer tests
+6. **The AES core is not a certified implementation.** It passes known-answer tests
    against NIST vectors in simulation. That is correctness, not certification.
-6. **The Rust post-quantum crates wrap reference implementations** and have not been
+7. **The Rust post-quantum crates wrap reference implementations** and have not been
    independently audited.
 
 ---
 
 ## What would move this forward
 
-An Artix-7 development board carrying the XC7A100T — the same part this design
-targets — costs a few hundred dollars, not the price of a custom board. That is
-enough to close gaps 1 and 2: measure the TRNG's real entropy, get real timing and
-utilisation numbers, and turn "simulated" into "measured" for most of the datapath.
+Two things, in order.
+
+**Write the timing constraints.** The design synthesizes but has no XDC clock
+constraint, so its maximum frequency is unknown. This costs nothing but time and
+turns an NA in the report into a number.
+
+**Then get a development board.** An Artix-7 board carrying the XC7A100T — the same
+part this design already synthesizes for, at 6.5% utilisation — costs a few hundred
+dollars, not the price of a custom dual-FPGA board. That closes the two gaps that
+matter most: measuring the TRNG's actual entropy against NIST SP 800-22, and
+capturing power traces to find out whether the masking and jitter countermeasures
+do anything real.
 
 ---
 

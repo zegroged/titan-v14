@@ -49,14 +49,19 @@ simulation/
 smartgen/
 synthesis/
 
-# --- Sentez/implementasyon raporları (üretilir; örnekler docs/ altında tutulur) ---
-*.rpt
-*.rpx
+# --- Sentez çıktıları (ikili; yeniden üretilir) ---
 *.dcp
 *.bit
 *.bin
 *.mcs
 *.ltx
+*.rpx
+
+# --- Sentez RAPORLARI: DEPODA KALIR ---
+# titan_v14/reports/ altındaki .rpt dosyaları tasarımın gerçekten sentezlendiğinin
+# kanıtı (kaynak kullanımı, saat raporu). Metin, küçük, ve README bunlara atıf yapıyor.
+*.rpt
+!titan_v14/reports/**/*.rpt
 
 # --- Ortam ve sırlar ---
 .env
