@@ -16,6 +16,8 @@
 
 ---
 
+**Nasıl yazıldı:** kod yapay zekâ yardımıyla yazıldı ve yazar tarafından gözden geçirildi.
+
 ## Durum — önce bunu oku
 
 Bu proje **hedef yonga için tasarlandı, simüle edildi ve sentezlendi. Hiçbir zaman

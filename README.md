@@ -16,6 +16,8 @@
 
 ---
 
+**How this was built:** the code was written with AI assistance and reviewed by the author.
+
 ## Status — read this first
 
 This project was **designed, simulated, and synthesized for its target part. It was
