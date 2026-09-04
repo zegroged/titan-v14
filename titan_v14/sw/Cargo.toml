@@ -12,7 +12,7 @@ members = [
 version = "0.1.0"
 edition = "2021"
 authors = ["PROJECT HİDRA"]
-license = "Proprietary"
+license = "MIT"
 
 [workspace.dependencies]
 # Cryptography

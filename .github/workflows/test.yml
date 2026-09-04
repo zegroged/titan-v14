@@ -1,0 +1,24 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # titan-core: post-quantum kripto yigini (Kyber, Dilithium, zarf, ratchet,
+  # entropi, hopping, dead drop, DHT, sentry) + capraz crate entegrasyon testleri.
+  # Saf Rust; tek dis bagimlilik pqcrypto-* ve onlarin C referans kodu, ubuntu
+  # runner'da derleniyor. titan_v14/sw ayri bir workspace ve buraya dahil degil.
+  titan-core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: titan-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust surumunu yaz
+        run: rustc --version && cargo --version
+      - name: Testler
+        run: cargo test --workspace --locked

@@ -65,6 +65,4 @@ titan_v14/
 
 ## License
 
-Proprietary. Distribution restricted.
-
-**Copyright 2026 PROJECT TITAN**
+MIT — see [LICENSE](../LICENSE) at the repository root.
