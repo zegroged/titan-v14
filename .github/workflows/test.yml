@@ -22,3 +22,19 @@ jobs:
         run: rustc --version && cargo --version
       - name: Testler
         run: cargo test --workspace --locked
+
+  # titan_v14/sw: HIDRA yazilim yigini (cekirdek kripto, ag, terminal arayuzu,
+  # simulasyon, uctan uca). Ayri bir Cargo workspace'i, o yuzden ayri is.
+  # hidra_ui ratatui/crossterm kullaniyor -- terminal arayuzu, sistem grafik
+  # kutuphanesi gerektirmiyor; geri kalan bagimliliklar da saf Rust.
+  hidra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: titan_v14/sw
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust surumunu yaz
+        run: rustc --version && cargo --version
+      - name: Testler
+        run: cargo test --workspace --locked
