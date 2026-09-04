@@ -4,6 +4,7 @@
 
 **English README:** [README.md](README.md)
 
+[![tests](https://github.com/zegroged/titan-v14/actions/workflows/test.yml/badge.svg)](https://github.com/zegroged/titan-v14/actions/workflows/test.yml)
 ![VHDL](https://img.shields.io/badge/VHDL-174%20dosya-blue)
 ![Rust](https://img.shields.io/badge/Rust-11%20crate-orange)
 ![Hedef](https://img.shields.io/badge/Hedef-Artix--7%20XC7A100T%20%2B%20PolarFire-lightgrey)
